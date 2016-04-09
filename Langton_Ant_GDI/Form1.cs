@@ -15,50 +15,19 @@ namespace Langton_Ant_GDI
         public Form1()
         {
             InitializeComponent();
-            this.label1.Text = Convert.ToString(step);
-            this.grid = new Cell[maxX, maxY];
-
-            for (int y = 0; y < maxY; y++)
-                for (int x = 0; x < maxX; x++)
-                    grid[x, y] = new Cell(x, y);
-
-            Random rand = new Random();
-            int antX = rand.Next(maxX);
-            int antY = rand.Next(maxY);
-
-            ant = new Cell(antX, antY);
-            ant.color = Color.Red;
-
-            switch (rand.Next(4))
-            {
-                case 0:
-                    ant.facingDirection = Direction.North;
-                    break;
-                case 1:
-                    ant.facingDirection = Direction.South;
-                    break;
-                case 2:
-                    ant.facingDirection = Direction.East;
-                    break;
-                case 3:
-                    ant.facingDirection = Direction.West;
-                    break;
-            }
-
-            grid[antX, antY] = ant;
-
+            gameInitialize();
         }
 
         Cell[,] grid;
-        int maxX = 15;
-        int maxY = 15;
-        int xWidth = 20;
-        int yWidth = 20;
+        int maxX = 60;
+        int maxY = 60;
+        int xWidth = 10;
+        int yWidth = 10;
 
         Cell ant;
 
-        private int step = 0;
-        private enum Direction { North, South, East, West };
+        private int step;
+        private enum Direction { North, South, East, West }
         private class Cell
         {
             public int x, y;
@@ -97,6 +66,48 @@ namespace Langton_Ant_GDI
                 thisBrush.Dispose();
             }
 
+            public enum TurnDirection { Left, Right }
+            public void Turn(TurnDirection turnDirection)
+            {
+                if (this.facingDirection == Direction.North)
+                {
+                    if (turnDirection == TurnDirection.Left) this.facingDirection = Direction.West;
+                    if (turnDirection == TurnDirection.Right) this.facingDirection = Direction.East;
+                    return;
+                }
+                if (this.facingDirection == Direction.East)
+                {
+                    if (turnDirection == TurnDirection.Left) this.facingDirection = Direction.North;
+                    if (turnDirection == TurnDirection.Right) this.facingDirection = Direction.South;
+                    return;
+                }
+                if (this.facingDirection == Direction.South)
+                {
+                    if (turnDirection == TurnDirection.Left) this.facingDirection = Direction.East;
+                    if (turnDirection == TurnDirection.Right) this.facingDirection = Direction.West;
+                    return;
+                }
+                if (this.facingDirection == Direction.West)
+                {
+                    if (turnDirection == TurnDirection.Left) this.facingDirection = Direction.South;
+                    if (turnDirection == TurnDirection.Right) this.facingDirection = Direction.North;
+                    return;
+                }
+            }
+
+            public void MoveForward(int maxX, int maxY)
+            {
+                if (this.facingDirection == Direction.North) this.y--;
+                if (this.facingDirection == Direction.South) this.y++;
+                if (this.facingDirection == Direction.West) this.x--;
+                if (this.facingDirection == Direction.East) this.x++;
+
+                if (this.x < 0) this.x = maxX -1;
+                if (this.y < 0) this.y = maxY -1;
+                if (this.x >= maxX) this.x = 0;
+                if (this.y >= maxY) this.y = 0;
+                
+            }
 
             private Rectangle BuildDirectionRect(Rectangle rect, Direction direction)
             {
@@ -139,11 +150,60 @@ namespace Langton_Ant_GDI
             this.label1.Text = Convert.ToString(this.step);
 
             gameUpdate();
-            gameDraw(label1.CreateGraphics());
+            gameDraw(panel1.CreateGraphics());
         }
 
+        private void gameInitialize()
+        {
+            this.step = 0;
+            this.label1.Text = Convert.ToString(step);
+            this.grid = new Cell[maxX, maxY];
+
+            for (int y = 0; y < maxY; y++)
+                for (int x = 0; x < maxX; x++)
+                    grid[x, y] = new Cell(x, y);
+
+            Random rand = new Random();
+            int antX = rand.Next(maxX);
+            int antY = rand.Next(maxY);
+
+            ant = new Cell(antX, antY);
+            ant.color = Color.Red;
+
+            switch (rand.Next(4))
+            {
+                case 0:
+                    ant.facingDirection = Direction.North;
+                    break;
+                case 1:
+                    ant.facingDirection = Direction.South;
+                    break;
+                case 2:
+                    ant.facingDirection = Direction.East;
+                    break;
+                case 3:
+                    ant.facingDirection = Direction.West;
+                    break;
+            }
+        }
         private void gameUpdate()
         {
+            Cell square = grid[ant.x, ant.y];
+
+            //At a green square, turn 90° right, flip the color of the square, move forward one unit
+            //At a black square, turn 90° left, flip the color of the square, move forward one unit
+            if (square.color == Color.Green)
+            {
+                ant.Turn(Cell.TurnDirection.Right);
+                square.color = Color.Black; 
+            }
+            else // Color.Black
+            {
+                ant.Turn(Cell.TurnDirection.Left);
+                square.color = Color.Green;
+            }
+
+            ant.MoveForward(maxX, maxY);
         }
         private void gameDraw(Graphics g)
         {
@@ -154,6 +214,36 @@ namespace Langton_Ant_GDI
                     this.grid[x, y].Draw(g, xWidth, yWidth); 
                 }
             }
+
+            ant.Draw(g, xWidth, yWidth);
+
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            gameInitialize();
+            gameDraw(panel1.CreateGraphics());
+        }
+
+        Timer t;
+        private void button3_Click(object sender, EventArgs e)
+        {
+            t = new Timer();
+            t.Interval = 30;
+            t.Tick += T_Tick;
+            t.Start(); 
+        }
+
+        private void T_Tick(object sender, EventArgs e)
+        {
+            button1_Click(null, null);
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            t.Stop();
+            t.Tick -= null;
+            t = null;
         }
 
         //private void testGameDraw(Graphics g)
