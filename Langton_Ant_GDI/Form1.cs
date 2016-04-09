@@ -140,7 +140,7 @@ namespace Langton_Ant_GDI
 
         private void panel1_Paint(object sender, PaintEventArgs e)
         {
-            gameDraw(e.Graphics);
+            gameDraw(e.Graphics, null);
         }
 
 
@@ -149,8 +149,8 @@ namespace Langton_Ant_GDI
             this.step++;
             this.label1.Text = Convert.ToString(this.step);
 
-            gameUpdate();
-            gameDraw(panel1.CreateGraphics());
+            Cell updateCell = gameUpdate();
+            gameDraw(panel1.CreateGraphics(), updateCell);
         }
 
         private void gameInitialize()
@@ -186,7 +186,7 @@ namespace Langton_Ant_GDI
                     break;
             }
         }
-        private void gameUpdate()
+        private Cell gameUpdate()
         {
             Cell square = grid[ant.x, ant.y];
 
@@ -204,15 +204,24 @@ namespace Langton_Ant_GDI
             }
 
             ant.MoveForward(maxX, maxY);
+
+            return square;
         }
-        private void gameDraw(Graphics g)
+        private void gameDraw(Graphics g, Cell updateCell)
         {
-            for (int y = 0; y < maxY; y++)
+            if (updateCell == null)
             {
-                for (int x = 0; x < maxX; x++)
+                for (int y = 0; y < maxY; y++)
                 {
-                    this.grid[x, y].Draw(g, xWidth, yWidth); 
+                    for (int x = 0; x < maxX; x++)
+                    {
+                        this.grid[x, y].Draw(g, xWidth, yWidth);
+                    }
                 }
+            }
+            else
+            {
+                updateCell.Draw(g, xWidth, yWidth);
             }
 
             ant.Draw(g, xWidth, yWidth);
@@ -222,14 +231,14 @@ namespace Langton_Ant_GDI
         private void button2_Click(object sender, EventArgs e)
         {
             gameInitialize();
-            gameDraw(panel1.CreateGraphics());
+            gameDraw(panel1.CreateGraphics(), null);
         }
 
         Timer t;
         private void button3_Click(object sender, EventArgs e)
         {
             t = new Timer();
-            t.Interval = 30;
+            t.Interval = 1;
             t.Tick += T_Tick;
             t.Start(); 
         }
